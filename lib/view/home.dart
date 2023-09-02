@@ -1,3 +1,4 @@
+import 'package:controlador_bomba_de_insulina/view/Report.dart';
 import 'package:controlador_bomba_de_insulina/view/overview.dart';
 import 'package:controlador_bomba_de_insulina/view/settings.dart';
 import 'package:flutter/material.dart';
@@ -30,20 +31,26 @@ class _MyHomePageState extends State<HomePage> {
           NavigationDestination(
             selectedIcon: Icon(Icons.home),
             icon: Icon(Icons.home_outlined),
-            label: 'Home',
-            tooltip: 'Home',
+            label: 'Início',
+            tooltip: 'Início',
+          ),
+          NavigationDestination(
+            selectedIcon: Icon(Icons.report),
+            icon: Icon(Icons.report_gmailerrorred),
+            label: 'Relatórios',
+            tooltip: 'Relatórios',
           ),
           NavigationDestination(
             selectedIcon: Icon(Icons.settings),
             icon: Icon(Icons.settings_outlined),
-            label: 'Settings',
-            tooltip: 'Settings',
+            label: 'Configurações',
+            tooltip: 'Configurações',
           ),
           NavigationDestination(
               selectedIcon: Icon(Icons.question_answer),
               icon: Icon(Icons.question_answer_outlined),
-              label: 'About',
-              tooltip: 'About'),
+              label: 'Sobre',
+              tooltip: 'Sobre'),
         ],
         selectedIndex: currentIndex,
         onDestinationSelected: (int index) {
@@ -54,6 +61,7 @@ class _MyHomePageState extends State<HomePage> {
       ),
       body: <Widget>[
         const Overview(),
+        const Report(),
         Settings(),
         const About(),
       ][currentIndex],
