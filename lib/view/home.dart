@@ -1,22 +1,30 @@
-import 'package:controlador_bomba_de_insulina/view/Report.dart';
+import 'package:controlador_bomba_de_insulina/view/report.dart';
 import 'package:controlador_bomba_de_insulina/view/overview.dart';
 import 'package:controlador_bomba_de_insulina/view/settings.dart';
 import 'package:flutter/material.dart';
 
+import '../service/free_flow_blueetooth_service.dart';
 import 'about.dart';
 
 class HomePage extends StatefulWidget {
-  final String title;
-
   const HomePage({super.key, required this.title});
+
+  final String title;
 
   @override
   State<HomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<HomePage> {
+  FreeFlowBluetoothService freeFlowBluethoothService = FreeFlowBluetoothService();
+
   int currentIndex = 0;
   NavigationDestinationLabelBehavior labelBehavior = NavigationDestinationLabelBehavior.alwaysShow;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +70,7 @@ class _MyHomePageState extends State<HomePage> {
       body: <Widget>[
         const Overview(),
         const Report(),
-        Settings(),
+        const Settings(),
         const About(),
       ][currentIndex],
     );

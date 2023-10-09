@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:controlador_bomba_de_insulina/service/free_flow_blueetooth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
 
 class Overview extends StatefulWidget {
@@ -9,14 +13,37 @@ class Overview extends StatefulWidget {
 }
 
 class _OverviewState extends State<Overview> {
+  final FreeFlowBluetoothService freeFlowBluetoothService = FreeFlowBluetoothService();
   final TextEditingController textEditingController = TextEditingController();
+
   final _insulinInputKey = GlobalKey<FormState>();
   final List<List<String>> _dummyInsulinLog = [];
-  final List<List<String>> test = [
-    ["a", "b"],
-    ["c", "d"],
-    ["e", "f"]
-  ];
+
+  BluetoothDevice? _connectedDevice;
+  late final BluetoothCharacteristic _characteristic;
+
+  @override
+  void initState() {
+    super.initState();
+    freeFlowBluetoothService.retrievePump().then((value) => setState(() {
+      setState(() {
+        _connectedDevice = value;
+      });
+      _connectedDevice?.connect().then((value) => {
+        _connectedDevice?.discoverServices().then((services) => {
+          services.forEach((service) {
+            if (service.uuid.toString() == "f69317b5-a6b2-4cf4-89e6-9c7d98be8891") {
+              service.characteristics.forEach((characteristic) {
+                if (characteristic.uuid.toString() == "2ec829c3-efad-4ba2-8ce1-bad71b1040f7") {
+                  _characteristic = characteristic;
+                }
+              });
+            }
+          })
+        })
+      });
+    })).catchError((_) => _connectedDevice = null);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +90,7 @@ class _OverviewState extends State<Overview> {
             child: const Text('Injetar Insulina'),
             onPressed: () => _inputBuilder(context),
           ),
+      Text(_connectedDevice?.localName ?? "Nenhum dispositivo conectado"),
         ],
       ),
     );
@@ -106,13 +134,24 @@ class _OverviewState extends State<Overview> {
                     child: const Text('Confimar'),
                     onPressed: () {
                       if (_insulinInputKey.currentState!.validate()) {
-                        _addDataToList(
-                            textEditingController.text, textEditingController);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Enviando para a bomba...'),
-                          ),
-                        );
+                        if (_connectedDevice != null) {
+                          int input = int.parse(textEditingController.text) * 5;
+                          _characteristic.write(utf8.encode(input.toString())).then((value) => {
+                            _addDataToList(textEditingController.text, textEditingController)
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Enviando para a bomba...'),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Erro ao enviar para a bomba!'),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        }
                         Navigator.pop(context);
                       }
                     },
