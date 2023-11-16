@@ -1,6 +1,7 @@
-import 'package:controlador_bomba_de_insulina/view/report.dart';
+import 'package:controlador_bomba_de_insulina/repository/system_dao.dart';
 import 'package:controlador_bomba_de_insulina/view/overview.dart';
 import 'package:controlador_bomba_de_insulina/view/settings.dart';
+import 'package:controlador_bomba_de_insulina/view/setup_steps/pump_settings_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../service/free_flow_blueetooth_service.dart';
@@ -16,10 +17,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<HomePage> {
-  FreeFlowBluetoothService freeFlowBluethoothService = FreeFlowBluetoothService();
+  final SystemDao systemDao = SystemDao();
+  final FreeFlowBluetoothService freeFlowBluethoothService = FreeFlowBluetoothService();
+  NavigationDestinationLabelBehavior labelBehavior = NavigationDestinationLabelBehavior.alwaysShow;
 
   int currentIndex = 0;
-  NavigationDestinationLabelBehavior labelBehavior = NavigationDestinationLabelBehavior.alwaysShow;
 
   @override
   void initState() {
@@ -69,7 +71,7 @@ class _MyHomePageState extends State<HomePage> {
       ),
       body: <Widget>[
         const Overview(),
-        const Report(),
+        const PumpSettingsScreen(),
         const Settings(),
         const About(),
       ][currentIndex],
