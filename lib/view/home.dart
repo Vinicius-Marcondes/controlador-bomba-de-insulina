@@ -1,10 +1,11 @@
+import 'package:controlador_bomba_de_insulina/model/user_model.dart';
 import 'package:controlador_bomba_de_insulina/repository/system_dao.dart';
+import 'package:controlador_bomba_de_insulina/service/user_service.dart';
 import 'package:controlador_bomba_de_insulina/view/overview.dart';
+import 'package:controlador_bomba_de_insulina/view/report.dart';
 import 'package:controlador_bomba_de_insulina/view/settings.dart';
-import 'package:controlador_bomba_de_insulina/view/setup_steps/pump_settings_screen.dart';
 import 'package:flutter/material.dart';
 
-import '../service/free_flow_blueetooth_service.dart';
 import 'about.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,7 +19,8 @@ class HomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<HomePage> {
   final SystemDao systemDao = SystemDao();
-  final FreeFlowBluetoothService freeFlowBluethoothService = FreeFlowBluetoothService();
+  final UserService userService = UserService();
+
   NavigationDestinationLabelBehavior labelBehavior = NavigationDestinationLabelBehavior.alwaysShow;
 
   int currentIndex = 0;
@@ -32,9 +34,22 @@ class _MyHomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
+          title: FutureBuilder<UserModel>(
+            future: userService.getUser(),
+            builder: (BuildContext context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Text('Bem vindo'); // Show loading spinner while waiting for db response
+              } else {
+                if (snapshot.hasError) {
+                  return const Text('Bem vindo');
+                } else {
+                  return Text('Bem vindo, ${snapshot.data!.firstName}');
+                }
+              }
+            },
+          ),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          foregroundColor: Colors.white),
       bottomNavigationBar: NavigationBar(
         labelBehavior: labelBehavior,
         destinations: const <Widget>[
@@ -71,7 +86,7 @@ class _MyHomePageState extends State<HomePage> {
       ),
       body: <Widget>[
         const Overview(),
-        const PumpSettingsScreen(),
+        const Report(),
         const Settings(),
         const About(),
       ][currentIndex],

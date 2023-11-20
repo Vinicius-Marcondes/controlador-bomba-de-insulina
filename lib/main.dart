@@ -1,3 +1,4 @@
+import 'package:controlador_bomba_de_insulina/model/system_model.dart';
 import 'package:controlador_bomba_de_insulina/repository/system_dao.dart';
 import 'package:controlador_bomba_de_insulina/service/free_flow_blueetooth_service.dart';
 import 'package:controlador_bomba_de_insulina/view/home.dart';
@@ -21,13 +22,13 @@ void main() {
 
 class MyApp extends StatelessWidget {
   final SystemDao systemDao = SystemDao();
+  final FreeFlowBluetoothService freeFlowBluetoothService = FreeFlowBluetoothService();
 
   MyApp({super.key});
 
   // Application root
   @override
   Widget build(BuildContext context) {
-    FreeFlowBluetoothService().connect();
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -35,14 +36,14 @@ class MyApp extends StatelessWidget {
             .lightGreen, // Define a cor da barra de status para a cor primária do tema
       ),
       child: MaterialApp(
-        title: 'FreeFlow Insulin Pump Prototype',
+        // title: 'FreeFlow Insulin Pump Prototype',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightGreen),
           useMaterial3: true,
           fontFamily: 'Roboto',
         ),
-        home: FutureBuilder<bool>(
-          future: systemDao.isSystemInitialized(),
+        home: FutureBuilder<SystemModel>(
+          future: systemDao.getSystem(),
           builder: (BuildContext context, snapshot) {
             if (!snapshot.hasData) {
               return const CircularProgressIndicator(); // Show loading spinner while waiting for db response
@@ -50,10 +51,11 @@ class MyApp extends StatelessWidget {
               if (snapshot.hasError) {
                 return Text('Error: ${snapshot.error}');
               } else {
-                if (snapshot.data!) {
-                  return const HomePage(title: 'FreeFlow Insulin Pump');
+                if (snapshot.data!.initialized == 0 || snapshot.data!.pumpRemoteId == null) {
+                    return const WelcomeScreen();
                 } else {
-                  return const WelcomeScreen();
+                  // freeFlowBluetoothService.connect();
+                  return const HomePage(title: 'FreeFlow Insulin Pump');
                 }
               }
             }

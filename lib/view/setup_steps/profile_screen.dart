@@ -164,6 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: <Widget>[
                               TextFormField(
                                 controller: _firstNameController,
+                                keyboardType: TextInputType.name,
                                 style: const TextStyle(
                                   color: Colors.white,
                                 ),
@@ -178,6 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       return AlertDialog(
                                         title: const Text('Digite seu nome'),
                                         content: TextField(
+                                          textCapitalization: TextCapitalization.sentences,
                                           controller: _firstNameController,
                                           autofocus: true,
                                         ),
@@ -218,6 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         title:
                                             const Text('Digite seu sobrenome'),
                                         content: TextField(
+                                          textCapitalization: TextCapitalization.sentences,
                                           controller: _lastNameController,
                                           autofocus: true,
                                         ),
@@ -251,26 +254,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   labelStyle: TextStyle(color: Colors.white),
                                 ),
                                 onTap: () async {
-                                  FocusScope.of(context).requestFocus(
-                                      FocusNode()); // to remove the keyboard if shown
-                                  final DateTime? pickedDate =
-                                      await showDatePicker(
+                                  FocusScope.of(context).requestFocus(FocusNode());
+
+                                  final DateTime? pickedDate = await showDatePicker(
                                     context: context,
                                     initialDate: DateTime.now(),
                                     firstDate: DateTime(1900),
                                     lastDate: DateTime.now(),
                                   );
+
                                   if (pickedDate != null) {
-                                    String formattedDate =
-                                        DateFormat('dd/MM/yyyy')
-                                            .format(pickedDate);
+                                    final String formattedDate = DateFormat('dd/MM/yyyy').format(pickedDate);
                                     _birthdateController.text = formattedDate;
                                   }
                                 },
                                 validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Por favor, insira sua data de nascimento';
-                                  }
                                   return null;
                                 },
                               ),

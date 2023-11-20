@@ -9,34 +9,21 @@ class SystemDao extends GenericDAO {
   SystemDao() : super();
 
   // Set system initialized
-  Future<int> setSystemInitialized() async {
+  Future<int> updateSystem(final SystemModel systemModel) async {
     final db = await getDatabase();
     return await db.update(
       SYSTEM_TABLE,
-      SystemModel(id: 1, initialized: 1).toMap(),
+      systemModel.toMap(),
       where: "id = ?",
-      whereArgs: [0],
+      whereArgs: [systemModel.id],
     );
   }
 
-  // Get initialized state of the system
-  Future<bool> isSystemInitialized() async {
+  Future<SystemModel> getSystem() async {
     final db = await getDatabase();
     final List<Map<String, dynamic>> maps = await db.query(
         SYSTEM_TABLE
     );
-
-    SystemModel systemModel = SystemModel.fromMap(maps.first);
-    return systemModel.initialized == 1;
-  }
-
-  // Get all records from System
-  Future<List<SystemModel>> getAll() async {
-    final db = await getDatabase();
-    final List<Map<String, dynamic>> maps = await db.query(SYSTEM_TABLE);
-
-    return List.generate(maps.length, (i) {
-      return SystemModel.fromMap(maps[i]);
-    });
+    return SystemModel.fromMap(maps.first);
   }
 }

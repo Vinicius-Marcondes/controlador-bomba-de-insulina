@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:controlador_bomba_de_insulina/model/user_model.dart';
 import 'package:controlador_bomba_de_insulina/repository/system_dao.dart';
-import 'package:controlador_bomba_de_insulina/repository/user_dao.dart';
+import 'package:controlador_bomba_de_insulina/service/invoke_reason.dart';
+import 'package:controlador_bomba_de_insulina/service/system_service.dart';
+import 'package:controlador_bomba_de_insulina/service/user_service.dart';
 import 'package:controlador_bomba_de_insulina/view/setup_steps/pump_settings_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -25,8 +27,10 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
   final TextEditingController _basalInsulinController = TextEditingController();
   final TextEditingController _insulinRateController = TextEditingController();
 
-  final UserDao userDao = UserDao();
   final SystemDao systemDao = SystemDao();
+
+  final UserService userService = UserService();
+  final SystemService systemService = SystemService();
 
   final List<String> _diabetesTypes = [
     'Tipo 1',
@@ -130,9 +134,6 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                                   );
                                 },
                                 validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Por favor, insira sua altura';
-                                  }
                                   return null;
                                 },
                               ),
@@ -172,9 +173,6 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                                   );
                                 },
                                 validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Por favor, insira seu peso';
-                                  }
                                   return null;
                                 },
                               ),
@@ -195,12 +193,11 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                                   );
                                 }).toList(),
                                 selectedItemBuilder: (BuildContext context) {
-                                  return _diabetesTypes
-                                      .map<Widget>((String value) {
+                                  return _diabetesTypes.map<Widget>((String value) {
                                     return Text(value,
                                         style: const TextStyle(
-                                            color: Colors
-                                                .white)); // Cor do texto após a seleção
+                                            color: Colors.white),
+                                    ); // Cor do texto após a seleção
                                   }).toList();
                                 },
                                 onChanged: (String? newValue) {
@@ -209,9 +206,6 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                                   });
                                 },
                                 validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Por favor, selecione seu tipo de diabetes';
-                                  }
                                   return null;
                                 },
                               ),
@@ -251,9 +245,6 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                                   );
                                 },
                                 validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Por favor, insira sua insulina basal';
-                                  }
                                   return null;
                                 },
                               ),
@@ -293,9 +284,6 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                                   );
                                 },
                                 validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Por favor, insira seu fator de correção';
-                                  }
                                   return null;
                                 },
                               ),
@@ -304,68 +292,26 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                               ),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  foregroundColor: Theme.of(context)
-                                      .colorScheme
-                                      .inversePrimary,
+                                  foregroundColor: Theme.of(context).colorScheme.inversePrimary,
                                   backgroundColor: Colors.white,
-                                  minimumSize:
-                                      Size(constraints.maxWidth * 0.6, 50),
+                                  minimumSize: Size(constraints.maxWidth * 0.6, 50),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
                                 onPressed: () {
-                                  if (_treatmentFormKey.currentState!
-                                      .validate()) {
-                                    widget.user.height =
-                                        double.parse(_heightController.text);
-                                    widget.user.weight =
-                                        double.parse(_weightController.text);
-                                    widget.user.diabetesType =
-                                        _selectedDiabetesType;
-                                    widget.user.basalInsulin = double.parse(
-                                        _basalInsulinController.text);
-                                    widget.user.insulinRate = double.parse(
-                                        _insulinRateController.text);
+                                  populateFields();
 
-                                    userDao
-                                        .insertUser(widget.user)
-                                        .whenComplete(
-                                          () => systemDao
-                                              .setSystemInitialized()
-                                              .whenComplete(
-                                                () => Navigator.push(
-                                                  context,
-                                                  PageRouteBuilder(
-                                                    pageBuilder: (context,
-                                                            animation1,
-                                                            animation2) =>
-                                                        const PumpSettingsScreen(),
-                                                    transitionsBuilder:
-                                                        (context,
-                                                            animation,
-                                                            secondaryAnimation,
-                                                            child) {
-                                                      var begin = const Offset(
-                                                          1.0, 0.0);
-                                                      var end = Offset.zero;
-                                                      var tween = Tween(
-                                                          begin: begin,
-                                                          end: end);
-                                                      var offsetAnimation =
-                                                          animation
-                                                              .drive(tween);
-                                                      return SlideTransition(
-                                                        position:
-                                                            offsetAnimation,
-                                                        child: child,
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                              ),
-                                        );
+                                  try {
+                                    userService.createUser(widget.user);
+                                  } catch(e){
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                      content: Text('Erro ao salvar usuário'),
+                                      backgroundColor: Colors.red,
+                                    ));
                                   }
+
+                                  systemService.setSystemInitialized().then((value) => advance());
                                 },
                                 child: const Text('Avançar'),
                               ),
@@ -385,6 +331,47 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  void populateFields() {
+
+    if (_heightController.text != "") {
+      widget.user.height = double.parse(_heightController.text);
+    }
+
+    if (_weightController.text != "") {
+      widget.user.weight = double.parse(_weightController.text);
+    }
+
+    widget.user.diabetesType = _selectedDiabetesType;
+
+    if (_basalInsulinController.text != "") {
+      widget.user.basalInsulin = double.parse(_basalInsulinController.text);
+    }
+
+    if (_insulinRateController.text != "") {
+      widget.user.insulinRate = double.parse(_insulinRateController.text.replaceAll(',', '.'));
+    }
+  }
+
+  void advance() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation1, animation2) =>
+        const PumpSettingsScreen(invokeReason: InvokeReason.FIRST_TIME_USE),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          var begin = const Offset(1.0, 0.0);
+          var end = Offset.zero;
+          var tween = Tween(begin: begin, end: end);
+          var offsetAnimation = animation.drive(tween);
+          return SlideTransition(
+            position: offsetAnimation,
+            child: child,
+          );
+        },
       ),
     );
   }

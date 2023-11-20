@@ -9,11 +9,12 @@ class UserModel {
   double? basalInsulin;
   double? insulinRate;
 
-  UserModel(
-      {required this.firstName,
+  UserModel({
+      required this.firstName,
       required this.lastName,
       required this.birthDate,
-      this.image});
+      this.image
+  });
 
   Map<String, dynamic> toMap() {
     return {
@@ -39,5 +40,5 @@ class UserModel {
         weight = map['weight'],
         diabetesType = map['diabetesType'],
         basalInsulin = map['basalInsulin'],
-        insulinRate = double.parse(map['insulinRate']);
+        insulinRate = map['insulinRate'] != null ? double.parse(map['insulinRate']): null;
 }

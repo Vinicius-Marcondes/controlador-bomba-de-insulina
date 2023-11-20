@@ -1,27 +1,27 @@
 import 'package:controlador_bomba_de_insulina/service/free_flow_blueetooth_service.dart';
+import 'package:controlador_bomba_de_insulina/service/invoke_reason.dart';
+import 'package:controlador_bomba_de_insulina/service/system_service.dart';
 import 'package:controlador_bomba_de_insulina/view/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class PumpSettingsScreen extends StatefulWidget {
-  const PumpSettingsScreen({super.key});
+  final InvokeReason invokeReason;
+  const PumpSettingsScreen({required this.invokeReason, super.key});
 
   @override
   State<PumpSettingsScreen> createState() => _PumpSettingsScreenState();
 }
 
 class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
-  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
-      GlobalKey<ScaffoldMessengerState>();
 
-  final FreeFlowBluetoothService freeFlowBluetoothService =
-      FreeFlowBluetoothService();
+  final FreeFlowBluetoothService freeFlowBluetoothService = FreeFlowBluetoothService();
+  final SystemService systemService = SystemService();
 
   final List<BluetoothDevice> _devicesList = [];
   final List<Guid> serviceList = [Guid('f69317b5-a6b2-4cf4-89e6-9c7d98be8891')];
 
-  bool condition = false;
-  bool _isConnecting = false;
+  bool _condition = false;
   BluetoothDevice? _connectedDevice;
 
   @override
@@ -94,7 +94,7 @@ class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
                   ],
                 ),
               ),
-              Container(
+              SizedBox(
                 height: constraints.maxHeight * 0.64,
                 child: _buildView(),
               ),
@@ -125,17 +125,17 @@ class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            onPressed: condition ? finishSetup : null,
+                            onPressed: _condition ? finishSetup : null,
                             child: const Text('Finalizar'),
                           ),
                           SizedBox(
                             height: constraints.maxHeight * 0.05,
                           ),
-                          const LinearProgressIndicator(
+                          widget.invokeReason == InvokeReason.FIRST_TIME_USE ? const LinearProgressIndicator(
                             borderRadius: BorderRadius.all(Radius.circular(10)),
                             minHeight: 10,
                             value: 1,
-                          ),
+                          ) : Container(),
                         ],
                       ),
                     ),
@@ -171,26 +171,32 @@ class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
                 context: context,
                 barrierDismissible: false,
                 builder: (BuildContext context) {
-                  return WillPopScope(
-                    onWillPop: () async => false,
-                    child: const Center(
+                  return const PopScope(
+                    child: Center(
                       child: CircularProgressIndicator(),
                     ),
                   );
                 },
               );
 
-              await device.connect(autoConnect: true);
-              await device.createBond();
-
-              Navigator.of(context, rootNavigator: true).pop(); // Close the dialog
-
-              setState(() {
-                _connectedDevice = device;
-                condition = true;
-                _isConnecting = false;
-              });
-            },
+              await device
+                  .connect(timeout: const Duration(seconds: 15))
+                  .then((value) => {
+                    setState(() {
+                      _connectedDevice = device;
+                      _condition = true;
+                    }),
+                    systemService.setPumpRemoteId(device.remoteId.toString())
+                  }).onError((error, stackTrace) => {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Erro ao conectar na bomba'),
+                        backgroundColor: Colors.red,
+                      ),
+                    )
+                  }).whenComplete(() =>
+                  Navigator.of(context).pop());
+            }
           ),
         );
       },

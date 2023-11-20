@@ -25,7 +25,7 @@ class _SettingsState extends State<Settings> {
       _connectedDevice = value;
       _connectedDevice?.connect();
     })).catchError((error) {
-      FlutterBluePlus.connectedSystemDevices
+      FlutterBluePlus.systemDevices
           .asStream()
           .listen((List<BluetoothDevice> devices) {
         for (BluetoothDevice device in devices) {
@@ -72,7 +72,7 @@ class _SettingsState extends State<Settings> {
       itemBuilder: (BuildContext context, int index) {
         BluetoothDevice device = _devicesList[index];
         return ListTile(
-          title: Text(device.localName),
+          title: Text(device.platformName),
           subtitle: Text(device.remoteId.toString()),
           trailing: ElevatedButton(
             child: const Text('Conectar'),
@@ -94,7 +94,7 @@ class _SettingsState extends State<Settings> {
       padding: const EdgeInsets.all(8),
       children: <Widget>[
         ListTile(
-          title: Text(_connectedDevice!.localName),
+          title: Text(_connectedDevice!.platformName),
           subtitle: Text(_connectedDevice!.remoteId.toString()),
           trailing: ElevatedButton(
             child: const Text('Desconectar'),
