@@ -1,4 +1,5 @@
 import 'package:controlador_bomba_de_insulina/model/insulin_entry_model.dart';
+import 'package:controlador_bomba_de_insulina/model/user_model.dart';
 import 'package:controlador_bomba_de_insulina/service/free_flow_blueetooth_service.dart';
 import 'package:controlador_bomba_de_insulina/service/user_service.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,8 @@ class Overview extends StatefulWidget {
 }
 
 class _OverviewState extends State<Overview> {
-  final FreeFlowBluetoothService freeFlowBluetoothService = FreeFlowBluetoothService();
+  final FreeFlowBluetoothService freeFlowBluetoothService =
+      FreeFlowBluetoothService();
   final TextEditingController textEditingController = TextEditingController();
   final UserService userService = UserService();
 
@@ -32,52 +34,123 @@ class _OverviewState extends State<Overview> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              SizedBox(
-                height: constraints.maxHeight * 0.5,
-                width: constraints.maxWidth,
-                child: Center(
+    return Scaffold(
+      appBar: AppBar(
+        title: FutureBuilder<UserModel>(
+          future: userService.getUser(),
+          builder: (BuildContext context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Text(
+                  'Bem vindo'); // Show loading spinner while waiting for db response
+            } else {
+              if (snapshot.hasError) {
+                return const Text('Bem vindo');
+              } else {
+                return Text(
+                  'Bem vindo, ${snapshot.data!.firstName}',
+                );
+              }
+            }
+          },
+        ),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        foregroundColor: Colors.white,
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            height: 480,
+            width: double.infinity,
+            clipBehavior: Clip.antiAlias,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  height: 80,
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  alignment: Alignment.centerLeft,
+                  child: FutureBuilder<InsulinEntryModel?>(
+                    future: userService.getLastInsulinEntry(),
+                    builder: (BuildContext context, snapshot) {
+                      if (snapshot.hasData) {
+                        return Text(
+                          "Ultima dose aplicada: ${snapshot.data!.units}",
+                          style: TextStyle(
+                            fontSize: 25,
+                            color: Colors.black54,
+                          ),
+                        );
+                      } else {
+                        return const Text("Nenuma entrada encontrada");
+                      }
+                    },
+                  ),
+                ),
+                Container(
+                  height: 355,
+                  width: 340,
                   child: _insulinEntries.isEmpty
                       ? const Text("Nenhuma entrada encontrada")
                       : ListView.builder(
                           itemCount: _insulinEntries.length,
                           itemBuilder: (BuildContext context, int index) {
-                            return Container(
-                              height: 50,
-                              color: index % 2 == 0 ? Colors.white : Colors.greenAccent,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text(
-                                    "${_insulinEntries[index].units}Ui",
-                                    style: const TextStyle(fontSize: 18),
-                                  ),
-                                  Text(
-                                    _insulinEntries[index].timestamp.toString(),
-                                    style: const TextStyle(fontSize: 18),
-                                  ),
-                                ],
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 0),
+                                height: 50,
+                                color: index % 2 == 0
+                                    ? Theme.of(context).colorScheme.background
+                                    : Colors.green[50],
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text(
+                                      "${_insulinEntries[index].units}Ui",
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
+                                    Text(
+                                      _insulinEntries[index]
+                                          .timestamp
+                                          .toString(),
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           },
                         ),
                 ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(150, 75),
-                ),
-                child: const Text('Injetar Insulina'),
-                onPressed: () => _inputBuilder(context),
-              ),
-            ],
-          );
-        }),
+              ],
+            ),
+          ),
+          Container(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  elevation: 5.0,
+                  backgroundColor: Theme.of(context).colorScheme.background,
+                  minimumSize: const Size(300, 70),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  )),
+              child: const Text('Injetar Insulina',
+                  style: TextStyle(
+                    fontSize: 18,
+                  )),
+              onPressed: () => _inputBuilder(context),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -123,13 +196,11 @@ class _OverviewState extends State<Overview> {
                   child: const Text('Confimar'),
                   onPressed: () async {
                     if (_insulinInputKey.currentState!.validate()) {
-                      BuildContext? dialogContext;
                       FocusScope.of(context).unfocus();
                       showDialog(
                         context: context,
                         barrierDismissible: false,
                         builder: (BuildContext context) {
-                          dialogContext = context;
                           return const PopScope(
                             canPop: false,
                             child: SizedBox(
@@ -146,7 +217,9 @@ class _OverviewState extends State<Overview> {
                         },
                       );
 
-                      await freeFlowBluetoothService.injectInsulin(textEditingController.text).then((value) {
+                      await freeFlowBluetoothService
+                          .injectInsulin(textEditingController.text)
+                          .then((value) {
                         userService.getInsulinEntries().then((value) => {
                               setState(() {
                                 _insulinEntries.clear();

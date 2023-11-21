@@ -2,14 +2,12 @@ import 'package:controlador_bomba_de_insulina/model/insulin_entry_model.dart';
 import 'package:controlador_bomba_de_insulina/model/user_model.dart';
 import 'package:controlador_bomba_de_insulina/repository/insulin_entry_dao.dart';
 import 'package:controlador_bomba_de_insulina/repository/user_dao.dart';
-import 'package:intl/intl.dart';
 
 class UserService {
   final UserDao userDao = UserDao();
   final InsulinEntryDao insulinEntryDao = InsulinEntryDao();
 
   Future<bool> createUser(final UserModel userModel) async {
-
     int result = await userDao.insertUser(userModel);
 
     if (result != 0) {
@@ -29,6 +27,12 @@ class UserService {
 
   Future<List<InsulinEntryModel>> getInsulinEntries() async {
     return await insulinEntryDao.getAllEntries();
+  }
+
+  Future<InsulinEntryModel?> getLastInsulinEntry() async {
+    List<InsulinEntryModel?> insulinEntries = await getInsulinEntries();
+    insulinEntries.sort((a, b) => b!.timestamp.compareTo(a!.timestamp));
+    return insulinEntries.first;
   }
 
   Future<List<InsulinEntryModel?>> getInsulinEntriesForInterval(DateTime start, DateTime end) async {

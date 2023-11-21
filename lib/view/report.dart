@@ -137,7 +137,36 @@ class _ReportState extends State<Report> {
                               final days = _radioButton == 0 ? 1 : _radioButton == 1 ? 7 : 30;
                               final DateTime startDate = DateTime.now().subtract(Duration(days: days));
                               final List<InsulinEntryModel?> insulinEntries = await userService.getInsulinEntriesForInterval(startDate, DateTime.now());
-                              await reportService.generateCSVFile(insulinEntries);
+                              print(DateTime.now());
+                              await reportService.generateCSVFile(insulinEntries).then((value) {
+                                showDialog(context: context, builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text("Relatório gerado!",
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                      ),
+                                    ),
+                                    content: const Text("O relatório foi gerado e salvo na pasta Downloads do seu dispositivo.", textAlign: TextAlign.left,),
+                                    actions: [
+                                      Center(child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("OK"))),
+                                    ],
+                                  );
+                                });
+                              }).onError((error, stackTrace) {
+                                showDialog(context: context, builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text("Erro ao gerar relatório!",
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                      ),
+                                    ),
+                                    content: const Text("Não foi possível gerar o relatório.", textAlign: TextAlign.left,),
+                                    actions: [
+                                      Center(child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("OK"))),
+                                    ],
+                                  );
+                                });
+                              });
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Theme.of(context).colorScheme.inversePrimary,

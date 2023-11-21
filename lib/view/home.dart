@@ -1,4 +1,3 @@
-import 'package:controlador_bomba_de_insulina/model/user_model.dart';
 import 'package:controlador_bomba_de_insulina/repository/system_dao.dart';
 import 'package:controlador_bomba_de_insulina/service/user_service.dart';
 import 'package:controlador_bomba_de_insulina/view/overview.dart';
@@ -33,23 +32,6 @@ class _MyHomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: FutureBuilder<UserModel>(
-            future: userService.getUser(),
-            builder: (BuildContext context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Text('Bem vindo'); // Show loading spinner while waiting for db response
-              } else {
-                if (snapshot.hasError) {
-                  return const Text('Bem vindo');
-                } else {
-                  return Text('Bem vindo, ${snapshot.data!.firstName}');
-                }
-              }
-            },
-          ),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          foregroundColor: Colors.white),
       bottomNavigationBar: NavigationBar(
         labelBehavior: labelBehavior,
         destinations: const <Widget>[
