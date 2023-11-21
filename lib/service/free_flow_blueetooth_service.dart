@@ -94,7 +94,7 @@ class FreeFlowBluetoothService {
       await systemService.lockPump();
       await insulinCharacteristic
           ?.write(timeout: 120, utf8.encode(insulinAmount))
-          .onError((error, stackTrace) => {print(stackTrace), throw Exception("Erro ao enviar insulina")});
+          .onError((error, stackTrace) => throw Exception("Erro ao enviar insulina"));
       await insulinEntryDao.insertEntry(InsulinEntryModel(units: int.parse(insulinAmount), timestamp: DateTime.now(), glicemia: glicemia));
       await systemService.decreaseInsulinStock(int.parse(insulinAmount));
       await systemService.unlockPump();

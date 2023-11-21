@@ -26,7 +26,9 @@ class UserService {
   }
 
   Future<List<InsulinEntryModel>> getInsulinEntries() async {
-    return await insulinEntryDao.getAllEntries();
+    final List<InsulinEntryModel> insulinEntries = await insulinEntryDao.getAllEntries();
+    insulinEntries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return insulinEntries;
   }
 
   Future<InsulinEntryModel?> getLastInsulinEntry() async {
@@ -39,5 +41,15 @@ class UserService {
     DateTime newStart = DateTime(start.year, start.month, start.day, 0, 0, 1);
     DateTime newEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
     return await insulinEntryDao.retriveListForInterval(newStart, newEnd);
+  }
+
+  Future<int> calculateRecomendedAmoutOfInulinForCarbs(final int carbs) async {
+    final UserModel userModel = await getUser();
+    final double? insulinSensitivity = userModel.insulinRate;
+    if (insulinSensitivity != null) {
+      return (carbs / insulinSensitivity).round();
+    } else {
+      return 0;
+    }
   }
 }

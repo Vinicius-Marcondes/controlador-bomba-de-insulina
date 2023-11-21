@@ -137,7 +137,6 @@ class _ReportState extends State<Report> {
                               final days = _radioButton == 0 ? 1 : _radioButton == 1 ? 7 : 30;
                               final DateTime startDate = DateTime.now().subtract(Duration(days: days));
                               final List<InsulinEntryModel?> insulinEntries = await userService.getInsulinEntriesForInterval(startDate, DateTime.now());
-                              print(DateTime.now());
                               await reportService.generateCSVFile(insulinEntries).then((value) {
                                 showDialog(context: context, builder: (context) {
                                   return AlertDialog(

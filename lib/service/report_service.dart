@@ -31,7 +31,5 @@ class ReportService {
 
     final File file = File('$path/relatorio_${formatter.format(DateTime.now())}.csv');
     await file.writeAsString(csv);
-
-    print("Relatório gerado");
   }
 }

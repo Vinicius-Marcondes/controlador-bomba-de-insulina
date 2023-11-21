@@ -3,6 +3,7 @@ import 'package:controlador_bomba_de_insulina/model/user_model.dart';
 import 'package:controlador_bomba_de_insulina/service/free_flow_blueetooth_service.dart';
 import 'package:controlador_bomba_de_insulina/service/user_service.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class Overview extends StatefulWidget {
   const Overview({super.key});
@@ -12,8 +13,7 @@ class Overview extends StatefulWidget {
 }
 
 class _OverviewState extends State<Overview> {
-  final FreeFlowBluetoothService freeFlowBluetoothService =
-      FreeFlowBluetoothService();
+  final FreeFlowBluetoothService freeFlowBluetoothService = FreeFlowBluetoothService();
   final TextEditingController textEditingController = TextEditingController();
   final UserService userService = UserService();
 
@@ -35,13 +35,13 @@ class _OverviewState extends State<Overview> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: FutureBuilder<UserModel>(
           future: userService.getUser(),
           builder: (BuildContext context, snapshot) {
             if (!snapshot.hasData) {
-              return const Text(
-                  'Bem vindo'); // Show loading spinner while waiting for db response
+              return const Text('Bem vindo'); // Show loading spinner while waiting for db response
             } else {
               if (snapshot.hasError) {
                 return const Text('Bem vindo');
@@ -56,86 +56,66 @@ class _OverviewState extends State<Overview> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            height: 480,
-            width: double.infinity,
-            clipBehavior: Clip.antiAlias,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
+      body: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              height: 480,
+              width: double.infinity,
+              clipBehavior: Clip.antiAlias,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                      height: 90,
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      alignment: Alignment.center,
+                      child: _insulinEntries.isEmpty
+                          ? const Text("Nenuma entrada encontrada")
+                          : Text(
+                              "Ultima dose aplicada: ${_insulinEntries.first.units}Ui",
+                              style: const TextStyle(
+                                fontSize: 25,
+                                color: Colors.black54,
+                              ),
+                            )),
+                  SizedBox(
+                    height: 355,
+                    width: 340,
+                    child: _insulinEntries.isEmpty
+                        ? const Text("Nenhuma entrada encontrada")
+                        : ListView.separated(
+                            separatorBuilder: (context, index) {
+                              return const Divider();
+                            },
+                            itemCount: _insulinEntries.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              final DateFormat dateFormatter = DateFormat("hh:mm a - dd/MM/yy");
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 30),
+                                leading: const Icon(Icons.medical_services_outlined),
+                                title: Text(
+                                  "${_insulinEntries[index].units}Ui",
+                                  style: const TextStyle(fontSize: 18),
+                                ),
+                                trailing: Text(dateFormatter.format(_insulinEntries[index].timestamp),
+                                    style: const TextStyle(fontSize: 16)),
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
             ),
-            child: Column(
-              children: [
-                Container(
-                  height: 80,
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  alignment: Alignment.centerLeft,
-                  child: FutureBuilder<InsulinEntryModel?>(
-                    future: userService.getLastInsulinEntry(),
-                    builder: (BuildContext context, snapshot) {
-                      if (snapshot.hasData) {
-                        return Text(
-                          "Ultima dose aplicada: ${snapshot.data!.units}",
-                          style: TextStyle(
-                            fontSize: 25,
-                            color: Colors.black54,
-                          ),
-                        );
-                      } else {
-                        return const Text("Nenuma entrada encontrada");
-                      }
-                    },
-                  ),
-                ),
-                Container(
-                  height: 355,
-                  width: 340,
-                  child: _insulinEntries.isEmpty
-                      ? const Text("Nenhuma entrada encontrada")
-                      : ListView.builder(
-                          itemCount: _insulinEntries.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 3),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 0),
-                                height: 50,
-                                color: index % 2 == 0
-                                    ? Theme.of(context).colorScheme.background
-                                    : Colors.green[50],
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text(
-                                      "${_insulinEntries[index].units}Ui",
-                                      style: const TextStyle(fontSize: 18),
-                                    ),
-                                    Text(
-                                      _insulinEntries[index]
-                                          .timestamp
-                                          .toString(),
-                                      style: const TextStyle(fontSize: 18),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            child: ElevatedButton(
+            ElevatedButton(
               style: ElevatedButton.styleFrom(
                   elevation: 5.0,
                   backgroundColor: Theme.of(context).colorScheme.background,
@@ -149,8 +129,8 @@ class _OverviewState extends State<Overview> {
                   )),
               onPressed: () => _inputBuilder(context),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -189,6 +169,8 @@ class _OverviewState extends State<Overview> {
                     },
                   ),
                 ),
+                // TODO: Implement carbs input
+                Text("Quantidade sugerida: ${userService.calculateRecomendedAmoutOfInulinForCarbs(0)}"),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     maximumSize: const Size(200, 100),
@@ -217,9 +199,7 @@ class _OverviewState extends State<Overview> {
                         },
                       );
 
-                      await freeFlowBluetoothService
-                          .injectInsulin(textEditingController.text)
-                          .then((value) {
+                      await freeFlowBluetoothService.injectInsulin(textEditingController.text).then((value) {
                         userService.getInsulinEntries().then((value) => {
                               setState(() {
                                 _insulinEntries.clear();
