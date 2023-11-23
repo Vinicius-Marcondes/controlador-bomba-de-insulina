@@ -31,7 +31,12 @@ class FreeFlowBluetoothService {
     await _connectedDevice?.connect(timeout: const Duration(seconds: 15));
     await systemService.setPumpRemoteId(_connectedDevice!.remoteId.toString());
 
-    (await getCharacteristic(PUMP_STATUS_CHARACTERISTIC_UUID))?.setNotifyValue(true);
+    final BluetoothCharacteristic? characteristic = await getCharacteristic(PUMP_STATUS_CHARACTERISTIC_UUID);
+    characteristic?.setNotifyValue(true);
+
+    if (characteristic?.lastValue.toString() == "0") {
+      await systemService.unlockPump();
+    }
     return _connectedDevice;
   }
 
