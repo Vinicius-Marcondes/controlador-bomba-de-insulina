@@ -55,4 +55,9 @@ class SystemService {
     systemModel.insulinStock -= insulinStock;
     return await systemDao.updateSystem(systemModel);
   }
+
+  Future<int> stockLeft() async {
+    final SystemModel systemModel = await systemDao.getSystem();
+    return systemModel.insulinStock;
+  }
 }

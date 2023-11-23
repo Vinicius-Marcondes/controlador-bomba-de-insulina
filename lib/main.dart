@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
                 if (snapshot.data!.initialized == 0 || snapshot.data!.pumpRemoteId == null) {
                     return const WelcomeScreen();
                 } else {
-                  // freeFlowBluetoothService.connect();
+                  freeFlowBluetoothService.connect();
                   return const HomePage(title: 'FreeFlow Insulin Pump');
                 }
               }

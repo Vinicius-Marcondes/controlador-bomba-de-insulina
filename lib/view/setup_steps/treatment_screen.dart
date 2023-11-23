@@ -25,7 +25,7 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _basalInsulinController = TextEditingController();
-  final TextEditingController _insulinRateController = TextEditingController();
+  final TextEditingController _insulinRateController = TextEditingController(text: "0.1");
 
   final SystemDao systemDao = SystemDao();
 
@@ -254,7 +254,7 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                                   color: Colors.white,
                                 ),
                                 decoration: const InputDecoration(
-                                  labelText: 'Fator de Correção',
+                                  labelText: 'Relação Insulina/Carboidrato',
                                   labelStyle: TextStyle(color: Colors.white),
                                 ),
                                 keyboardType: TextInputType.number,
@@ -284,6 +284,11 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                                   );
                                 },
                                 validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Insira um valor';
+                                  } else if (double.parse(value) < 0.1) {
+                                    return 'Insira um valor maior que 0.1';
+                                  }
                                   return null;
                                 },
                               ),

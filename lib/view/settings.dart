@@ -1,4 +1,5 @@
 import 'package:controlador_bomba_de_insulina/service/free_flow_blueetooth_service.dart';
+import 'package:controlador_bomba_de_insulina/service/system_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -12,7 +13,8 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  FreeFlowBluetoothService freeFlowBluetoothService = FreeFlowBluetoothService();
+  final FreeFlowBluetoothService freeFlowBluetoothService = FreeFlowBluetoothService();
+  final SystemService systemService = SystemService();
 
   BluetoothDevice? _connectedDevice;
   final List<BluetoothDevice> _devicesList = [];
@@ -79,6 +81,7 @@ class _SettingsState extends State<Settings> {
             onPressed: () async {
               await device.connect();
               await device.createBond();
+              await systemService.setPumpRemoteId(device.remoteId.toString());
               setState(() {
                 _connectedDevice = device;
               });

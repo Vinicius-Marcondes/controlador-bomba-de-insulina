@@ -29,6 +29,9 @@ class FreeFlowBluetoothService {
   Future<BluetoothDevice?> connect() async {
     _connectedDevice = await retrievePump();
     await _connectedDevice?.connect(timeout: const Duration(seconds: 15));
+    await systemService.setPumpRemoteId(_connectedDevice!.remoteId.toString());
+
+    (await getCharacteristic(PUMP_STATUS_CHARACTERISTIC_UUID))?.setNotifyValue(true);
     return _connectedDevice;
   }
 
@@ -40,8 +43,8 @@ class FreeFlowBluetoothService {
       throw Exception("Bomba não configurada");
     }
 
-    BluetoothDevice? device = devices.firstWhere((element) => element?.remoteId.toString() == pumpRemoteId,
-        orElse: () => throw Exception("Bomba não pareada"));
+    BluetoothDevice? device =
+        devices.firstWhere((element) => element?.remoteId.toString() == pumpRemoteId, orElse: () => throw Exception("Bomba não pareada"));
 
     return device;
   }
@@ -84,12 +87,24 @@ class FreeFlowBluetoothService {
     return statusString == "1";
   }
 
+  // Get status stream
+  Stream<List<int>> get statusStream async* {
+    BluetoothCharacteristic? pumpStatusCharacteristic = await getCharacteristic(PUMP_STATUS_CHARACTERISTIC_UUID);
+    pumpStatusCharacteristic?.setNotifyValue(true);
+    yield* pumpStatusCharacteristic!.onValueReceived;
+  }
+
   Future<void> injectInsulin(final String insulinAmount, {int? glicemia}) async {
     BluetoothCharacteristic? insulinCharacteristic = await getCharacteristic(INSULIN_CHARACTERISTIC_UUID);
+    final int stockLeft = await systemService.stockLeft();
 
-    final bool pumpAvailable = await isPumpBusy() && (await systemService.isPumpLocked());
-    if (!pumpAvailable) {
+    final bool pumpBusy = await isPumpBusy();
+    final bool isPumpLocked = await systemService.isPumpLocked();
+
+    if (pumpBusy || isPumpLocked) {
       throw Exception("Bomba ocupada");
+    } else if (stockLeft < int.parse(insulinAmount)) {
+      throw Exception("Estoque insuficiente");
     } else {
       await systemService.lockPump();
       await insulinCharacteristic

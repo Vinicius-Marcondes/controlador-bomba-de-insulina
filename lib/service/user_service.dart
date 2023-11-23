@@ -47,7 +47,7 @@ class UserService {
     final UserModel userModel = await getUser();
     final double? insulinSensitivity = userModel.insulinRate;
     if (insulinSensitivity != null) {
-      return (carbs / insulinSensitivity).round();
+      return (carbs * insulinSensitivity).floor();
     } else {
       return 0;
     }

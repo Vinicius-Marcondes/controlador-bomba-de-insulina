@@ -69,12 +69,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       imageQuality: 50,
     );
 
-    File file = File(selected!.path);
-
-    setState(() {
-      _imageFile = selected;
-      bytes = base64Encode(file.readAsBytesSync());
-    });
+    if (selected != null) {
+      File file = File(selected.path);
+      setState(() {
+        _imageFile = selected;
+        bytes = base64Encode(file.readAsBytesSync());
+      });
+    }
   }
 
   @override
@@ -258,7 +259,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                   final DateTime? pickedDate = await showDatePicker(
                                     context: context,
-                                    initialDate: DateTime.now(),
+                                    initialDate: DateTime(2000,1, 1),
                                     firstDate: DateTime(1900),
                                     lastDate: DateTime.now(),
                                   );
