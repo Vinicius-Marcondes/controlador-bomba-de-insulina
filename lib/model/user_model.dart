@@ -1,6 +1,6 @@
 class UserModel {
-  final String firstName;
-  final String lastName;
+  String firstName;
+  String lastName;
   String? image;
   final String? birthDate;
   double? height;

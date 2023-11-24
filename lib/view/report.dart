@@ -27,11 +27,7 @@ class _ReportState extends State<Report> {
         appBar: AppBar(
           title: const Text("Relatório"),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          titleTextStyle: const TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          foregroundColor: Colors.white,
         ),
         body: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {

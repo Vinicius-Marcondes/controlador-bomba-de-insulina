@@ -179,6 +179,7 @@ class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
                 },
               );
 
+              await device.connect();
               await device.createBond()
                   .then((value) => {
                     setState(() {
@@ -187,6 +188,7 @@ class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
                     }),
                     systemService.setPumpRemoteId(device.remoteId.toString())
                   }).onError((error, stackTrace) => {
+                    print(error),
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Erro ao conectar na bomba'),
