@@ -1,6 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
-import 'package:controlador_bomba_de_insulina/repository/generic_dao.dart';
+import 'package:controlador_bomba_de_insulina/repository/database_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 

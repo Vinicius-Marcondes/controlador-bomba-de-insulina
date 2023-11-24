@@ -264,7 +264,6 @@ class _OverviewState extends State<Overview> {
                                     })
                                   });
                             }).onError((error, stackTrace) {
-                              print(">>>>>>>>>>>>>${error}");
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text("Erro ao enviar insulina..."),

@@ -23,20 +23,17 @@ class _SettingsState extends State<Settings> {
   void initState() {
     super.initState();
 
-    freeFlowBluetoothService.retrievePump().then((value) => setState(() {
+    freeFlowBluetoothService.retrievePump().then((value) {
       _connectedDevice = value;
-      _connectedDevice?.connect();
-    })).catchError((error) {
-      FlutterBluePlus.systemDevices
-          .asStream()
-          .listen((List<BluetoothDevice> devices) {
-        for (BluetoothDevice device in devices) {
-          _addDeviceTolist(device);
-        }
-      });
+    });
+
+    FlutterBluePlus.systemDevices.asStream().listen((List<BluetoothDevice> devices) {
+      for (final BluetoothDevice device in devices) {
+        _addDeviceTolist(device);
+      }
 
       FlutterBluePlus.scanResults.listen((List<ScanResult> results) {
-        for (ScanResult result in results) {
+        for (final ScanResult result in results) {
           _addDeviceTolist(result.device);
         }
       });
@@ -47,13 +44,6 @@ class _SettingsState extends State<Settings> {
     });
 
     return;
-  }
-
-  @override
-  void setState(VoidCallback fn) {
-    if (mounted) {
-      super.setState(fn);
-    }
   }
 
   @override
@@ -80,10 +70,11 @@ class _SettingsState extends State<Settings> {
             child: const Text('Conectar'),
             onPressed: () async {
               await device.connect();
-              await device.createBond();
-              await systemService.setPumpRemoteId(device.remoteId.toString());
-              setState(() {
-                _connectedDevice = device;
+              await device.createBond().then((value) async {
+                await systemService.setPumpRemoteId(device.remoteId.toString());
+                setState(() {
+                  _connectedDevice = device;
+                });
               });
             },
           ),
@@ -147,16 +138,11 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  _addDeviceTolist(final BluetoothDevice device) {
+  void _addDeviceTolist(final BluetoothDevice device) {
     if (!_devicesList.contains(device)) {
       setState(() {
         _devicesList.add(device);
       });
     }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }

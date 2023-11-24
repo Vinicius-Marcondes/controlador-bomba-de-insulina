@@ -179,8 +179,7 @@ class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
                 },
               );
 
-              await device
-                  .connect(timeout: const Duration(seconds: 15))
+              await device.createBond()
                   .then((value) => {
                     setState(() {
                       _connectedDevice = device;
