@@ -107,7 +107,7 @@ class FreeFlowBluetoothService {
   }
 
   Future<bool> validatePumpStock() async {
-    BluetoothCharacteristic? pumpStatusCharacteristic = await getCharacteristic(PUMP_STOCK_CHARACTERISTIC_UUID);
+    BluetoothCharacteristic? pumpStatusCharacteristic = await getCharacteristic(PUMP_STATUS_CHARACTERISTIC_UUID);
     List<int> status = await pumpStatusCharacteristic.read();
     String statusString = "";
 
@@ -117,7 +117,7 @@ class FreeFlowBluetoothService {
       statusString = utf8.decode(status);
     }
 
-    return statusString == "1";
+    return statusString == "2";
   }
 
   Future<void> injectInsulin(final String insulinAmount, {int? glicemia}) async {
@@ -136,11 +136,17 @@ class FreeFlowBluetoothService {
       await systemService.lockPump();
       await insulinCharacteristic
           .write(timeout: 120, utf8.encode(insulinAmount))
-          .onError((error, stackTrace) => throw Exception("Erro ao enviar insulina"));
+          .onError((error, stackTrace) => throw Exception("Erro de conexão ao enviar insulina"));
       await insulinEntryDao.insertEntry(InsulinEntryModel(units: int.parse(insulinAmount), timestamp: DateTime.now(), glicemia: glicemia));
       await systemService.decreaseInsulinStock(int.parse(insulinAmount));
       await systemService.unlockPump();
-      await getDevice().then((value) => value.disconnect());
     }
+  }
+
+  Future<void> refillPump() async {
+    BluetoothCharacteristic? pumpStockCharacteristic = await getCharacteristic(PUMP_STOCK_CHARACTERISTIC_UUID);
+    await pumpStockCharacteristic.write(timeout: 120, utf8.encode("0"));
+    await systemService.updateInsulinStock(50);
+    await systemService.unlockPump();
   }
 }

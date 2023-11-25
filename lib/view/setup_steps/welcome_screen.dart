@@ -1,7 +1,7 @@
 import 'package:controlador_bomba_de_insulina/service/invoke_reason.dart';
 import 'package:controlador_bomba_de_insulina/service/system_service.dart';
 import 'package:controlador_bomba_de_insulina/view/setup_steps/profile_screen.dart';
-import 'package:controlador_bomba_de_insulina/view/setup_steps/pump_settings_screen.dart';
+import 'package:controlador_bomba_de_insulina/view/setup_steps/pump_step_screen.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -135,7 +135,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     if (!(await systemService.isSystemInitialized())) {
       return const ProfileScreen();
     } else {
-      return const PumpSettingsScreen(
+      return const PumpStepScreen(
           invokeReason: InvokeReason.PUMP_NOT_CONFIGURED);
     }
   }

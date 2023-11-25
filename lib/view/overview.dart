@@ -21,7 +21,7 @@ class _OverviewState extends State<Overview> {
   final TextEditingController glycemiaEditingController = TextEditingController();
 
   final _insulinInputKey = GlobalKey<FormState>();
-  final List<InsulinEntryModel> _insulinEntries = [];
+  List<InsulinEntryModel> _insulinEntries = [];
 
   int _suggestedUnits = 0;
 
@@ -30,11 +30,18 @@ class _OverviewState extends State<Overview> {
     super.initState();
 
     userService.getInsulinEntries().then((value) => {
-          setState(() {
-            _insulinEntries.clear();
-            _insulinEntries.addAll(value);
-          })
-        });
+      setState(() {
+        _insulinEntries.clear();
+        _insulinEntries.addAll(value);
+      })
+    });
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
   }
 
   @override
@@ -58,7 +65,10 @@ class _OverviewState extends State<Overview> {
             }
           },
         ),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme
+            .of(context)
+            .colorScheme
+            .inversePrimary,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -79,38 +89,37 @@ class _OverviewState extends State<Overview> {
                       child: _insulinEntries.isEmpty
                           ? null
                           : Text(
-                              "Ultima dose aplicada: ${_insulinEntries.first.units}Ui",
-                              style: const TextStyle(
-                                fontSize: 25,
-                                color: Colors.black54,
-                              ),
-                            )),
+                        "Ultima dose aplicada: ${_insulinEntries.first.units}Ui",
+                        style: const TextStyle(
+                          fontSize: 25,
+                          color: Colors.black54,
+                        ),
+                      )),
                   SizedBox(
                     height: 355,
                     width: 340,
                     child: _insulinEntries.isEmpty
                         ? const Center(
-                            child: Text("Nenhuma insulina aplicada até o momento!"),
-                          )
+                      child: Text("Nenhuma insulina aplicada até o momento!"),
+                    )
                         : ListView.separated(
-                            separatorBuilder: (context, index) {
-                              return const Divider();
-                            },
-                            itemCount: _insulinEntries.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              final DateFormat dateFormatter = DateFormat("hh:mm a - dd/MM/yy");
-                              return ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 30),
-                                leading: const Icon(Icons.medical_services_outlined),
-                                title: Text(
-                                  "${_insulinEntries[index].units}Ui",
-                                  style: const TextStyle(fontSize: 18),
-                                ),
-
-                                trailing: Text(dateFormatter.format(_insulinEntries[index].timestamp), style: const TextStyle(fontSize: 16)),
-                              );
-                            },
+                      separatorBuilder: (context, index) {
+                        return const Divider();
+                      },
+                      itemCount: _insulinEntries.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final DateFormat dateFormatter = DateFormat("hh:mm a - dd/MM/yy");
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 30),
+                          leading: const Icon(Icons.medical_services_outlined),
+                          title: Text(
+                            "${_insulinEntries[index].units}Ui",
+                            style: const TextStyle(fontSize: 18),
                           ),
+                          trailing: Text(dateFormatter.format(_insulinEntries[index].timestamp), style: const TextStyle(fontSize: 16)),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -118,7 +127,10 @@ class _OverviewState extends State<Overview> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                   elevation: 5.0,
-                  backgroundColor: Theme.of(context).colorScheme.background,
+                  backgroundColor: Theme
+                      .of(context)
+                      .colorScheme
+                      .background,
                   minimumSize: const Size(300, 70),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -169,7 +181,7 @@ class _OverviewState extends State<Overview> {
                               ),
                               onChanged: (value) async {
                                 final int suggestedUnits =
-                                    await userService.calculateRecomendedAmoutOfInulinForCarbs(int.parse(carbsEditingController.text));
+                                await userService.calculateRecomendedAmoutOfInulinForCarbs(int.parse(carbsEditingController.text));
                                 setState(() {
                                   if (carbsEditingController.text.isNotEmpty) {
                                     _suggestedUnits = suggestedUnits;
@@ -256,17 +268,10 @@ class _OverviewState extends State<Overview> {
 
                             await freeFlowBluetoothService
                                 .injectInsulin(insulinEditingController.text, glicemia: convertGlycemia(glycemiaEditingController.text))
-                                .then((value) {
-                              userService.getInsulinEntries().then((value) => {
-                                    setState(() {
-                                      _insulinEntries.clear();
-                                      _insulinEntries.addAll(value);
-                                    })
-                                  });
-                            }).onError((error, stackTrace) {
+                                .onError((error, stackTrace) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Erro ao enviar insulina..."),
+                                SnackBar(
+                                  content: Text(error.toString().replaceAll(RegExp(r'^.*?:+'), "")),
                                   backgroundColor: Colors.red,
                                 ),
                               );
@@ -276,6 +281,11 @@ class _OverviewState extends State<Overview> {
                               insulinEditingController.clear();
                               carbsEditingController.clear();
                               glycemiaEditingController.clear();
+                            });
+
+                            final List<InsulinEntryModel> insulinEntries = await userService.getInsulinEntries();
+                            setState(() {
+                              _insulinEntries = insulinEntries;
                             });
                           }
                         },

@@ -2,57 +2,31 @@ import 'package:controlador_bomba_de_insulina/service/free_flow_blueetooth_servi
 import 'package:controlador_bomba_de_insulina/service/invoke_reason.dart';
 import 'package:controlador_bomba_de_insulina/service/system_service.dart';
 import 'package:controlador_bomba_de_insulina/view/home.dart';
+import 'package:controlador_bomba_de_insulina/widgets/pump_view_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
-class PumpSettingsScreen extends StatefulWidget {
+class PumpStepScreen extends StatefulWidget {
   final InvokeReason invokeReason;
-  const PumpSettingsScreen({required this.invokeReason, super.key});
+  const PumpStepScreen({required this.invokeReason, super.key});
 
   @override
-  State<PumpSettingsScreen> createState() => _PumpSettingsScreenState();
+  State<PumpStepScreen> createState() => PumpStepScreenState();
+
+  static PumpStepScreenState? of(BuildContext context) {
+    return context.findAncestorStateOfType<PumpStepScreenState>();
+  }
 }
 
-class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
+class PumpStepScreenState extends State<PumpStepScreen> {
 
   final FreeFlowBluetoothService freeFlowBluetoothService = FreeFlowBluetoothService();
   final SystemService systemService = SystemService();
 
-  final List<BluetoothDevice> _devicesList = [];
-  final List<Guid> serviceList = [Guid('f69317b5-a6b2-4cf4-89e6-9c7d98be8891')];
-
   bool _condition = false;
-  BluetoothDevice? _connectedDevice;
 
-  @override
-  void initState() {
-    super.initState();
-
-    FlutterBluePlus.systemDevices
-        .asStream()
-        .listen((List<BluetoothDevice> devices) {
-      for (BluetoothDevice device in devices) {
-        _addDeviceTolist(device);
-      }
-    });
-
-    FlutterBluePlus.scanResults.listen((List<ScanResult> results) {
-      for (ScanResult result in results) {
-        _addDeviceTolist(result.device);
-      }
-    });
-
-    if (!FlutterBluePlus.isScanningNow) {
-      FlutterBluePlus.startScan(withServices: serviceList, continuousUpdates: true);
-    }
-  }
-
-  @override
-  void setState(VoidCallback fn) {
-    if (mounted) {
-      super.setState(fn);
-    }
-  }
+  set condition(final bool condition) => setState(() {
+    _condition = condition;
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +70,7 @@ class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
               ),
               SizedBox(
                 height: constraints.maxHeight * 0.64,
-                child: _buildView(),
+                child: const PumpViewWidget(),
               ),
               Container(
                 height: constraints.maxHeight * 0.24,
@@ -149,83 +123,6 @@ class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
     );
   }
 
-  ListView _buildView() {
-    if (_connectedDevice != null) {
-      return _buildConnectDevice();
-    }
-    return _buildListDevices();
-  }
-
-  ListView _buildListDevices() {
-    return ListView.builder(
-      itemCount: _devicesList.length,
-      itemBuilder: (BuildContext context, int index) {
-        BluetoothDevice device = _devicesList[index];
-        return ListTile(
-          title: Text(device.platformName),
-          subtitle: Text(device.remoteId.toString()),
-          trailing: ElevatedButton(
-            child: const Text('Conectar'),
-            onPressed: () async {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (BuildContext context) {
-                  return const PopScope(
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                },
-              );
-
-              await device.connect();
-              await device.createBond()
-                  .then((value) => {
-                    setState(() {
-                      _connectedDevice = device;
-                      _condition = true;
-                    }),
-                    systemService.setPumpRemoteId(device.remoteId.toString())
-                  }).onError((error, stackTrace) => {
-                    print(error),
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Erro ao conectar na bomba'),
-                        backgroundColor: Colors.red,
-                      ),
-                    )
-                  }).whenComplete(() =>
-                  Navigator.of(context).pop());
-            }
-          ),
-        );
-      },
-    );
-  }
-
-  ListView _buildConnectDevice() {
-    return ListView(
-      padding: const EdgeInsets.all(8),
-      children: <Widget>[
-        ListTile(
-          title: Text(_connectedDevice!.platformName),
-          subtitle: Text(_connectedDevice!.remoteId.toString()),
-          trailing: ElevatedButton(
-            child: const Text('Desconectar'),
-            onPressed: () async {
-              await _connectedDevice!.removeBond();
-              await _connectedDevice!.disconnect();
-              setState(() {
-                _connectedDevice = null;
-              });
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   finishSetup() {
     Navigator.pushAndRemoveUntil(
       context,
@@ -245,22 +142,5 @@ class _PumpSettingsScreenState extends State<PumpSettingsScreen> {
       ),
       (route) => false,
     );
-  }
-
-  _addDeviceTolist(final BluetoothDevice device) {
-    if (!_devicesList.contains(device)) {
-      setState(() {
-        _devicesList.add(device);
-      });
-    }
-
-    if (!FlutterBluePlus.isScanningNow) {
-      FlutterBluePlus.startScan();
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }

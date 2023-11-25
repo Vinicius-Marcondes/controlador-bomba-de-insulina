@@ -5,7 +5,7 @@ import 'package:controlador_bomba_de_insulina/repository/system_dao.dart';
 import 'package:controlador_bomba_de_insulina/service/invoke_reason.dart';
 import 'package:controlador_bomba_de_insulina/service/system_service.dart';
 import 'package:controlador_bomba_de_insulina/service/user_service.dart';
-import 'package:controlador_bomba_de_insulina/view/setup_steps/pump_settings_screen.dart';
+import 'package:controlador_bomba_de_insulina/view/setup_steps/pump_step_screen.dart';
 import 'package:flutter/material.dart';
 
 class TreatmentScreen extends StatefulWidget {
@@ -366,7 +366,7 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation1, animation2) =>
-        const PumpSettingsScreen(invokeReason: InvokeReason.FIRST_TIME_USE),
+        const PumpStepScreen(invokeReason: InvokeReason.FIRST_TIME_USE),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           var begin = const Offset(1.0, 0.0);
           var end = Offset.zero;

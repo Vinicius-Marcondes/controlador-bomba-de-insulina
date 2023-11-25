@@ -5,6 +5,7 @@ import 'package:controlador_bomba_de_insulina/model/user_model.dart';
 import 'package:controlador_bomba_de_insulina/service/free_flow_blueetooth_service.dart';
 import 'package:controlador_bomba_de_insulina/service/system_service.dart';
 import 'package:controlador_bomba_de_insulina/service/user_service.dart';
+import 'package:controlador_bomba_de_insulina/view/pump_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -178,10 +179,10 @@ class _SettingsState extends State<Settings> {
                 ],
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
-            Container(
+            SizedBox(
               height: 60,
               width: 300,
               child: ElevatedButton(
@@ -193,9 +194,12 @@ class _SettingsState extends State<Settings> {
                   ),
                 ),
                 onPressed: () {
-                  // Adicione a lógica do botão aqui
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PumpSettingsScreen()),
+                  );
                 },
-                child: Text('Configurar Bomba'),
+                child: const Text('Configurar Bomba'),
               ),
             ),
           ],

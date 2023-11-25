@@ -1,6 +1,6 @@
 import 'package:controlador_bomba_de_insulina/service/free_flow_blueetooth_service.dart';
 import 'package:controlador_bomba_de_insulina/service/system_service.dart';
-import 'package:controlador_bomba_de_insulina/view/characteristic_view.dart';
+import 'package:controlador_bomba_de_insulina/view/setup_steps/pump_step_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -18,7 +18,7 @@ class _PumpViewWidgetState extends State<PumpViewWidget> {
 
   BluetoothDevice? _connectedDevice;
   final List<BluetoothDevice> _devicesList = [];
-  final List<Guid> serviceList = [Guid(FreeFlowBluetoothService.SERVICE_UUID)];
+  final List<Guid> _serviceList = [Guid(FreeFlowBluetoothService.SERVICE_UUID)];
 
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _PumpViewWidgetState extends State<PumpViewWidget> {
       });
 
       if (!FlutterBluePlus.isScanningNow) {
-        FlutterBluePlus.startScan();
+        FlutterBluePlus.startScan(withServices: _serviceList);
       }
     });
 
@@ -66,13 +66,29 @@ class _PumpViewWidgetState extends State<PumpViewWidget> {
           trailing: ElevatedButton(
             child: const Text('Conectar'),
             onPressed: () async {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return const PopScope(
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                },
+              );
+
               await device.connect();
               await device.createBond().then((value) async {
                 await systemService.setPumpRemoteId(device.remoteId.toString());
                 setState(() {
                   _connectedDevice = device;
+                  PumpStepScreenState? father = PumpStepScreen.of(context);
+                  if (father != null) {
+                    father.condition = true;
+                  }
                 });
-              });
+              }).whenComplete(() => Navigator.of(context).pop());
             },
           ),
         );
@@ -90,46 +106,28 @@ class _PumpViewWidgetState extends State<PumpViewWidget> {
           trailing: ElevatedButton(
             child: const Text('Desconectar'),
             onPressed: () async {
-              await _connectedDevice!.removeBond();
-              await _connectedDevice!.disconnect();
-              setState(() {
-                _connectedDevice = null;
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return const PopScope(
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                },
+              );
+
+              await _connectedDevice!.connect().whenComplete(() async {
+                await _connectedDevice!.removeBond().whenComplete(() {
+                  setState(() {
+                    _connectedDevice = null;
+                  });
+                  Navigator.of(context).pop();
+                });
               });
             },
           ),
-        ),
-        const Text("Services"),
-        FutureBuilder(
-          future: _connectedDevice!.discoverServices(),
-          builder: (BuildContext context, AsyncSnapshot<List<BluetoothService>> snapshot) {
-            if (snapshot.hasData) {
-              return ListView(
-                shrinkWrap: true,
-                children: snapshot.data!.map((service) {
-                  return Column(
-                    children: <Widget>[
-                      ListTile(
-                        title: Text(service.uuid.toString()),
-                        subtitle: Text(service.remoteId.toString()),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) {
-                                return CharacteristicView(service: service);
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                }).toList(),
-              );
-            } else if (snapshot.hasError) {
-              return Text(snapshot.error.toString());
-            }
-            return const CircularProgressIndicator();
-          },
         ),
       ],
     );

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:controlador_bomba_de_insulina/Util/image_utils.dart';
 import 'package:controlador_bomba_de_insulina/model/user_model.dart';
 import 'package:controlador_bomba_de_insulina/view/setup_steps/treatment_screen.dart';
 import 'package:flutter/material.dart';
