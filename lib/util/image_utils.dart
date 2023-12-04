@@ -46,10 +46,6 @@ class ImageUtils {
 
     if (selected != null) {
       return Image.file(File(selected.path));
-      // setState(() {
-      //   _imageFile = selected;
-      //   bytes = base64Encode(file.readAsBytesSync());
-      // });
     } else {
       throw Exception("Imagem não selecionada");
     }

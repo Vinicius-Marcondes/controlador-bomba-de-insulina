@@ -55,6 +55,9 @@ class _SettingsState extends State<Settings> {
                       if (snapshot.hasData) {
                         _user = snapshot.data!;
                         _base64image = _user!.image;
+                        nameController.text = _user!.firstName;
+                        lastNameController.text = _user!.lastName;
+                        insulinRatioController.text = _user!.insulinRate.toString();
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -65,8 +68,8 @@ class _SettingsState extends State<Settings> {
                                 height: 180,
                                 child: ClipOval(
                                   child: _base64image != null
-                                      ? Image.memory(base64Decode(_base64image!), fit: BoxFit.cover, frameBuilder:
-                                          (BuildContext context, Widget child, int? frame, bool wasSynchronouslyLoaded) {
+                                      ? Image.memory(base64Decode(_base64image!), fit: BoxFit.cover,
+                                          frameBuilder: (BuildContext context, Widget child, int? frame, bool wasSynchronouslyLoaded) {
                                           if (wasSynchronouslyLoaded) {
                                             return child;
                                           }
@@ -112,6 +115,7 @@ class _SettingsState extends State<Settings> {
                                                 border: UnderlineInputBorder(),
                                                 labelText: 'Nome',
                                               ),
+                                              readOnly: true,
                                               controller: nameController,
                                               onTap: () async {
                                                 showDialog(
@@ -120,6 +124,7 @@ class _SettingsState extends State<Settings> {
                                                       return AlertDialog(
                                                         title: const Text('Nome'),
                                                         content: TextField(
+                                                          autofocus: true,
                                                           controller: nameController,
                                                           decoration: const InputDecoration(hintText: "Digite seu nome"),
                                                         ),
@@ -134,17 +139,105 @@ class _SettingsState extends State<Settings> {
                                                             child: const Text('Salvar'),
                                                             onPressed: () async {
                                                               if (nameController.text.isNotEmpty) {
-                                                                _user!.firstName = nameController.text;
-                                                                await userService.updateUser(_user!);
-                                                                setState(() {});
+                                                                _user!.firstName = nameController.text.trim();
+                                                                await userService.updateUser(_user!).whenComplete(() {
+                                                                  setState(() {
+                                                                  });
+                                                                  Navigator.of(context).pop();
+                                                                });
                                                               }
-                                                              nameController.clear();
-                                                              Navigator.of(context).pop();
                                                             },
                                                           ),
                                                         ],
                                                       );
                                                     });
+                                              },
+                                            ),
+                                            TextField(
+                                              decoration: const InputDecoration(
+                                                border: UnderlineInputBorder(),
+                                                labelText: 'Sobrenome',
+                                              ),
+                                              readOnly: true,
+                                              controller: lastNameController,
+                                              onTap: () async {
+                                                showDialog(
+                                                    context: context,
+                                                    builder: (BuildContext context) {
+                                                      return AlertDialog(
+                                                        title: const Text('Sobrenome'),
+                                                        content: TextField(
+                                                          autofocus: true,
+                                                          controller: lastNameController,
+                                                          decoration: const InputDecoration(hintText: "Digite seu Sobrenome"),
+                                                        ),
+                                                        actions: <Widget>[
+                                                          TextButton(
+                                                            child: const Text('Cancelar'),
+                                                            onPressed: () {
+                                                              Navigator.of(context).pop();
+                                                            },
+                                                          ),
+                                                          TextButton(
+                                                            child: const Text('Salvar'),
+                                                            onPressed: () async {
+                                                              if (lastNameController.text.isNotEmpty) {
+                                                                _user!.lastName = lastNameController.text.trimRight();
+                                                                await userService.updateUser(_user!).whenComplete(() {
+                                                                  Navigator.of(context).pop();
+                                                                  setState(() {
+                                                                  });
+                                                                });
+                                                              }
+                                                            },
+                                                          ),
+                                                        ],
+                                                      );
+                                                    });
+                                              },
+                                            ),
+                                            TextField(
+                                              decoration: const InputDecoration(
+                                                border: UnderlineInputBorder(),
+                                                labelText: 'Fator de correção',
+                                              ),
+                                              readOnly: true,
+                                              controller: insulinRatioController,
+                                              onTap: () async {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (BuildContext context) {
+                                                    return AlertDialog(
+                                                      title: const Text('Fator de correção'),
+                                                      content: TextField(
+                                                        autofocus: true,
+                                                        controller: insulinRatioController,
+                                                        keyboardType: TextInputType.number,
+                                                        decoration: const InputDecoration(hintText: "Digite o fator de correção"),
+                                                      ),
+                                                      actions: <Widget>[
+                                                        TextButton(
+                                                          child: const Text('Cancelar'),
+                                                          onPressed: () {
+                                                            Navigator.of(context).pop();
+                                                          },
+                                                        ),
+                                                        TextButton(
+                                                          child: const Text('Salvar'),
+                                                          onPressed: () async {
+                                                            if (insulinRatioController.text.isNotEmpty) {
+                                                              _user!.insulinRate = double.parse(insulinRatioController.text);
+                                                              await userService.updateUser(_user!);
+                                                              setState(() {});
+                                                            }
+                                                            insulinRatioController.clear();
+                                                            Navigator.of(context).pop();
+                                                          },
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                );
                                               },
                                             ),
                                             const SizedBox(height: 10),
@@ -247,9 +340,11 @@ class _SettingsState extends State<Settings> {
     );
 
     if (selected != null) {
-      final String bytes = (await selected.readAsBytes()).toString();
-      setState(() {
-        _base64image = bytes;
+      selected.readAsBytes().then((value) {
+        _base64image = base64Encode(value);
+        _user!.image = _base64image;
+        userService.updateUser(_user!);
+        setState(() {});
       });
     }
   }

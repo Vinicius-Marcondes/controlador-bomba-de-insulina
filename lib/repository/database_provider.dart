@@ -27,6 +27,6 @@ class GenericDAO {
     await db.execute('CREATE TABLE $USER_TABLE(id INTEGER PRIMARY KEY, firstName TEXT, lastName TEXT, birthDate TEXT, image BLOB, height REAL, weight REAL, diabetesType INTEGER, basalInsulin REAL, insulinRate TEXT);');
     await db.execute('CREATE TABLE $INSULIN_ENTRY_TABLE(id INTEGER PRIMARY KEY, units INTEGER, glicemia INT, timestamp TEXT, userId INTEGER, FOREIGN KEY(userId) REFERENCES User(id));');
 
-    await db.insert(SYSTEM_TABLE, {"id": 0, "initialized": 0, "pumpRemoteId": null, "insulinStock": 0, "pumpLocked": 0});
+    await db.insert(SYSTEM_TABLE, {"id": 0, "initialized": 0, "pumpRemoteId": null, "insulinStock": 300, "pumpLocked": 0});
   }
 }

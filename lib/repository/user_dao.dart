@@ -32,14 +32,14 @@ class UserDao extends GenericDAO {
     return UserModel.fromMap(maps.first);
   }
 
-  Future<void> updateUser(UserModel user) async {
+  Future<void> updateUser(final UserModel user) async {
     final Database db = await getDatabase();
 
     await db.update(
       USER_TABLE,
       user.toMap(),
-      where: "firstName = ?",
-      whereArgs: [user.firstName],
+      where: "id = ?",
+      whereArgs: [user.id],
     );
   }
 }

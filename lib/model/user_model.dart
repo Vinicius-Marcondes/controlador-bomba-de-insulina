@@ -1,4 +1,5 @@
 class UserModel {
+  int? id;
   String firstName;
   String lastName;
   String? image;
@@ -18,6 +19,7 @@ class UserModel {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'firstName': firstName,
       'lastName': lastName,
       'birthdate': birthDate,
@@ -32,7 +34,8 @@ class UserModel {
   }
 
   UserModel.fromMap(Map<String, dynamic> map)
-      : firstName = map['firstName'],
+      : id = map['id'],
+        firstName = map['firstName'],
         lastName = map['lastName'],
         birthDate = map['birthDate'],
         image = map['image'],
