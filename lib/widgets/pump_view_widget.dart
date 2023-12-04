@@ -78,8 +78,7 @@ class _PumpViewWidgetState extends State<PumpViewWidget> {
                 },
               );
 
-              await device.connect();
-              await device.createBond().then((value) async {
+              await device.connect().then((value) async {
                 await systemService.setPumpRemoteId(device.remoteId.toString());
                 setState(() {
                   _connectedDevice = device;
